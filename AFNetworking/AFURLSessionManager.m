@@ -157,7 +157,7 @@ didCompleteWithError:(NSError *)error
     if (self.downloadFileURL) {
         userInfo[AFNetworkingTaskDidCompleteAssetPathKey] = self.downloadFileURL;
     } else if (self.mutableData) {
-        userInfo[AFNetworkingTaskDidCompleteResponseDataKey] = [NSData dataWithData:self.mutableData];
+        userInfo[AFNetworkingTaskDidCompleteResponseDataKey] = self.mutableData;
     }
 
     if (error) {
@@ -175,7 +175,13 @@ didCompleteWithError:(NSError *)error
     } else {
         dispatch_async(url_session_manager_processing_queue(), ^{
             NSError *serializationError = nil;
-            responseObject = [manager.responseSerializer responseObjectForResponse:task.response data:[NSData dataWithData:self.mutableData] error:&serializationError];
+
+            responseObject = [manager.responseSerializer responseObjectForResponse:task.response data:self.mutableData error:&serializationError];
+
+            NSData *data = (NSData *)responseObject;
+            if (data == nil || [data length] == 0) {
+                responseObject = self.mutableData;
+            }
 
             if (self.downloadFileURL) {
                 responseObject = self.downloadFileURL;
